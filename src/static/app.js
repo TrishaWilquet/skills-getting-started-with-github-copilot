@@ -29,12 +29,22 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="participants">
             <strong>Participants</strong>
             ${details.participants.length > 0
-              ? `<div class="participant-list">${details.participants.map((email) => `
-                  <div class="participant-row">
-                    <span>${email}</span>
-                    <button type="button" class="remove-participant" data-email="${email}" title="Remove ${email}" aria-label="Remove ${email}">&#x1F5D1;</button>
-                  </div>
-                `).join("")}</div>`
+              ? `<div class="participant-list">${details.participants.map((email) => {
+                  const safeEmail = String(email).replace(/[&<>"']/g, (ch) => ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;",
+                  }[ch]));
+                  const encodedEmail = encodeURIComponent(email);
+                  return `
+                   <div class="participant-row">
+                     <span>${safeEmail}</span>
+                     <button type="button" class="remove-participant" data-email="${encodedEmail}" title="Remove ${safeEmail}" aria-label="Remove ${safeEmail}">&#x1F5D1;</button>
+                   </div>
+                 `;
+                }).join("")}</div>`
               : "<p class=\"no-participants\">No students signed up yet.</p>"}
           </div>
         `;
@@ -43,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         activityCard.querySelectorAll(".remove-participant").forEach((button) => {
           button.addEventListener("click", async () => {
-            const email = button.dataset.email;
+            const email = decodeURIComponent(button.dataset.email);
 
             try {
               const response = await fetch(
